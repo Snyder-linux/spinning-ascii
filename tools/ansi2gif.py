@@ -7,7 +7,7 @@ Every spinner can print frames without a terminal:
         | tools/ansi2gif.py --size 100x45 --fps 16 -o wizard-hat/wizard-hat.gif
 
 Each frame is HEIGHT lines of text with 24-bit colour codes
-(ESC[38;2;R;G;Bm). Frames are drawn as SVG on a fixed character grid and
+(ESC[38;2;R;G;Bm) or 256-colour codes (ESC[38;5;Nm). Frames are drawn as SVG on a fixed character grid and
 assembled by ImageMagick, so it needs `magick` with SVG support (librsvg).
 """
 import argparse
@@ -17,10 +17,26 @@ import subprocess
 import sys
 import tempfile
 
-TOKEN = re.compile(r"\x1b\[38;2;(\d+);(\d+);(\d+)m|\x1b\[[0-9;]*[A-Za-z]|(.)", re.S)
+TOKEN = re.compile(r"\x1b\[38;2;(\d+);(\d+);(\d+)m|\x1b\[38;5;(\d+)m|\x1b\[[0-9;]*[A-Za-z]|(.)", re.S)
 CELL_W, CELL_H, FONT_PX = 7, 14, 12.5
 BACKGROUND = "#0b0d13"
 FONTS = "DejaVu Sans Mono, Adwaita Mono, Menlo, Consolas, monospace"
+
+
+BASIC16 = ["000000", "800000", "008000", "808000", "000080", "800080", "008080", "c0c0c0",
+           "808080", "ff0000", "00ff00", "ffff00", "0000ff", "ff00ff", "00ffff", "ffffff"]
+
+
+def xterm256(n):
+    """The standard xterm colour for 256-colour code n."""
+    if n < 16:
+        return "#" + BASIC16[n]
+    if n < 232:
+        n -= 16
+        levels = [0, 95, 135, 175, 215, 255]
+        return "#%02x%02x%02x" % (levels[n // 36], levels[n // 6 % 6], levels[n % 6])
+    grey = 8 + 10 * (n - 232)
+    return "#%02x%02x%02x" % (grey, grey, grey)
 
 
 def parse_frames(text, width, height):
@@ -34,8 +50,10 @@ def parse_frames(text, width, height):
             for m in TOKEN.finditer(line):
                 if m.group(1):
                     colour = "#%02x%02x%02x" % tuple(int(m.group(k)) for k in (1, 2, 3))
-                elif m.group(4) is not None:
-                    row.append((m.group(4), colour))
+                elif m.group(4):
+                    colour = xterm256(int(m.group(4)))
+                elif m.group(5) is not None:
+                    row.append((m.group(5), colour))
             row += [(" ", None)] * (width - len(row))
             frame.append(row[:width])
         yield frame

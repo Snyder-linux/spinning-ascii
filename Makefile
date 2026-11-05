@@ -1,7 +1,7 @@
 # Builds every spinner: each */name.c becomes */name.
 #
 #   make            build everything
-#   make hat3d      build one spinner by name
+#   make hat3d      build one spinner by name (hat3d, station, spin, ...)
 #   make clean      remove the binaries
 
 CC      ?= cc
