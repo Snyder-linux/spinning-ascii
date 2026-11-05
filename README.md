@@ -3,8 +3,8 @@
 Spinning 3D objects, rendered live as ASCII art in your terminal.
 
 Each spinner is a single C file that needs only the C standard library and
-`libm`. It models a real object, lights it, and draws it frame by frame
-as coloured text.
+`libm` (the brain also uses threads). It models a real object, lights it,
+and draws it frame by frame as coloured text.
 
 <p align="center">
   <img src="wizard-hat/wizard-hat.gif" alt="A navy wizard hat spinning in ASCII, with gold sparkles and a shadow on a checkered floor" width="700">
@@ -16,11 +16,13 @@ as coloured text.
 |---|---|
 | [**wizard-hat**](wizard-hat/) | A floppy velvet wizard hat whose tip curls over and sways, with a pleated band and knot, a satin-lined brim, sparkles, and real shadows. Rebuilt in 3D from a photo. |
 | [**space-station**](space-station/) | The double-wheel station from *2001: A Space Odyssey*: one wheel finished with lit windows, the other still under construction. Ray-marched with soft shadows, turning among the stars. |
+| [**brain**](brain/) | A human brain sculpted from anatomy references: 22 named sulci, folded gyri, a cerebellum with *arbor vitae*, brainstem and nerves. Switch between fresh tissue, a lobes atlas and an MRI look, or cut it open to see the deep structures. |
 | [**small-spinners**](small-spinners/) | Two classic `donut.c`-style tumblers. `spin` cycles through a knot, a ribbon, a seashell, a blob and morphing solids; `morph` flows from a torus to a cube, an octahedron and a sphere. |
 
 <p align="center">
-  <img src="space-station/space-station.gif" alt="The double-wheeled space station turning in ASCII" width="420">
-  <img src="small-spinners/morph.gif" alt="A shape morphing as it tumbles in ASCII" width="280">
+  <img src="brain/brain.gif" alt="A human brain turning in ASCII" width="300">
+  <img src="space-station/space-station.gif" alt="The double-wheeled space station turning in ASCII" width="300">
+  <img src="small-spinners/morph.gif" alt="A shape morphing as it tumbles in ASCII" width="200">
 </p>
 
 More are on the way.
@@ -33,6 +35,7 @@ cd spinning-ascii
 make                     # builds every spinner
 ./wizard-hat/hat3d       # q to quit
 ./space-station/station
+./brain/brain3d
 ./small-spinners/spin
 ./small-spinners/morph
 ```
@@ -67,7 +70,8 @@ New spinners are welcome. To keep the collection consistent, each one should:
 1. Live in its own folder, `name/`, as a single C11 file using only the C
    standard library and `libm` (small related spinners can share a folder,
    like `small-spinners/`). The top-level `make` builds any `*/*.c`
-   automatically.
+   automatically. A spinner that needs threads, like the brain, gets one
+   `LDLIBS += -pthread` line in the `Makefile`.
 2. Accept `--frames N`, `--size WxH`, `--fps N` and `--mono`.
 3. Print plain frames when stdout isn't a terminal, with rows ending in
    `\r\n` and no cursor movement. That lets

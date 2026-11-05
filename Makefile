@@ -14,6 +14,9 @@ NAMES    := $(notdir $(BINARIES))
 
 all: $(BINARIES)
 
+# the brain renders on every core
+brain/brain3d: LDLIBS += -pthread
+
 %: %.c
 	$(CC) $(CFLAGS) -o $@ $< $(LDLIBS)
 
