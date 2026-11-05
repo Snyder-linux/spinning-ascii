@@ -3,8 +3,8 @@
 
 Every spinner can print frames without a terminal:
 
-    ./wizard-hat/hat3d --frames 96 --size 80x36 --fps 16 \
-        | tools/ansi2gif.py --size 80x36 --fps 16 -o wizard-hat/wizard-hat.gif
+    ./wizard-hat/hat3d --frames 96 --size 100x45 --fps 16 \
+        | tools/ansi2gif.py --size 100x45 --fps 16 -o wizard-hat/wizard-hat.gif
 
 Each frame is HEIGHT lines of text with 24-bit colour codes
 (ESC[38;2;R;G;Bm). Frames are drawn as SVG on a fixed character grid and
@@ -18,7 +18,7 @@ import sys
 import tempfile
 
 TOKEN = re.compile(r"\x1b\[38;2;(\d+);(\d+);(\d+)m|\x1b\[[0-9;]*[A-Za-z]|(.)", re.S)
-CELL_W, CELL_H, FONT_PX = 8, 16, 13.5
+CELL_W, CELL_H, FONT_PX = 7, 14, 12.5
 BACKGROUND = "#0b0d13"
 FONTS = "DejaVu Sans Mono, Adwaita Mono, Menlo, Consolas, monospace"
 
@@ -50,7 +50,7 @@ def frame_to_svg(frame, width, height):
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width * CELL_W}" '
         f'height="{height * CELL_H}">',
         f'<rect width="100%" height="100%" fill="{BACKGROUND}"/>',
-        f'<g font-family="{FONTS}" font-size="{FONT_PX}" xml:space="preserve">',
+        f'<g font-family="{FONTS}" font-size="{FONT_PX}" font-weight="bold" xml:space="preserve">',
     ]
     for y, row in enumerate(frame):
         x = 0

@@ -148,7 +148,9 @@ static void spine_at(const Hat *h, double u, V3 *C, V3 *T, V3 *N, V3 *B) {
 }
 
 static double crown_r0(double u) {   /* smooth radius profile: sack then taper */
-    return 0.80 * pow(1.0 - u, 0.80) * (1.0 + 0.22 * sin(M_PI * fmin(u * 1.5, 1.0)));
+    /* the second term keeps the curled tip thick enough to read as ASCII */
+    return 0.80 * pow(1.0 - u, 0.80) * (1.0 + 0.22 * sin(M_PI * fmin(u * 1.5, 1.0)))
+         + 0.07 * pow(1.0 - u, 0.35);
 }
 
 static V3 tube_point(const Hat *h, double u, double th, double r) {
@@ -160,8 +162,8 @@ static V3 tube_point(const Hat *h, double u, double th, double r) {
 static V3 surf_crown(const Hat *h, double u, double v) {
     double th = v * 2 * M_PI, w = sin(M_PI * u);
     double cr = 0.070 * sin(5 * th + 7 * u + 1.3 + 0.4 * sin(0.9 * h->t)) * w
-              + 0.040 * sin(9 * th - 13 * u) * sin(M_PI * fmin(u * 1.5, 1.0))
-              + 0.025 * sin(3 * th + 25 * u) * w;
+              + 0.025 * sin(9 * th - 13 * u) * sin(M_PI * fmin(u * 1.5, 1.0))
+              + 0.012 * sin(3 * th + 25 * u) * w;
     return tube_point(h, u, th, crown_r0(u) * (1 + cr));
 }
 
@@ -235,11 +237,11 @@ static V3 surf_flap(const Hat *h, double u, double v) {
 enum { M_FELT, M_VELVET, M_BRIM, M_LINING, M_PIPING, M_COUNT };
 typedef struct { double base[3], kd, ks, shin, sheen, tex; } Material;
 static const Material MATS[M_COUNT] = {
-    [M_FELT]   = {{52, 72, 170}, 0.85, 0.06, 10, 0.22, 0.10},
-    [M_VELVET] = {{62, 84, 195}, 0.80, 0.22, 24, 0.55, 0.05},
-    [M_BRIM]   = {{50, 70, 165}, 0.85, 0.06, 10, 0.22, 0.10},
-    [M_LINING] = {{36, 46, 125}, 0.55, 0.85, 48, 0.08, 0.02},
-    [M_PIPING] = {{46, 60, 155}, 0.65, 0.90, 60, 0.10, 0.00},
+    [M_FELT]   = {{60, 84, 200}, 0.85, 0.06, 10, 0.22, 0.04},
+    [M_VELVET] = {{70, 94, 218}, 0.80, 0.22, 24, 0.55, 0.03},
+    [M_BRIM]   = {{58, 82, 196}, 0.85, 0.06, 10, 0.22, 0.04},
+    [M_LINING] = {{46, 58, 160}, 0.55, 0.85, 48, 0.08, 0.02},
+    [M_PIPING] = {{54, 70, 180}, 0.65, 0.90, 60, 0.10, 0.00},
 };
 
 /* ------------------------------------------------------------- sampling */
@@ -344,7 +346,7 @@ static const char RAMP[] = ".,-~:;=!*#$@";       /* dim -> bright */
 #define NRAMP ((int)sizeof RAMP - 1)
 #define ASP      0.5            /* char cell width / height */
 #define CAM_D    8.0
-#define CENTER_Y 1.15
+#define CENTER_Y 1.0
 #define FLOOR_Y  (-1.25)
 #define FLOOR_R  2.7
 #define NSPARK   90
@@ -390,8 +392,8 @@ static void render(State *S) {
     M3 M = mxm(Rc, Mobj);
     V3 off = mxv(Rc, v3(0, bob - CENTER_Y, 0));
 
-    /* projection: fit ~5.6 units across and ~4.6 units tall */
-    double K = fmin(W * 0.92 * CAM_D / 5.4, H * 0.92 * CAM_D / (5.0 * ASP)) * S->zoom;
+    /* projection: fit ~5.4 units across and ~5.6 units tall */
+    double K = fmin(W * 0.92 * CAM_D / 5.4, H * 0.92 * CAM_D / (5.6 * ASP)) * S->zoom;
     double cx = W / 2.0, cy = H / 2.0 + 0.5;
     double q = fmax(26, K / CAM_D * 2.4);     /* grid samples per world unit */
 
@@ -444,11 +446,18 @@ static void render(State *S) {
         double lum = 0.16 + m->kd * (0.85 * diff + 0.40 * fill) + 0.30 * rim + spec + sheen + tex;
         int ci = (int)(clampd(lum, 0, 0.999) * NRAMP);
 
-        double lit = 0.45 + 1.10 * (m->kd * diff + 0.45 * fill) + tex;
-        double r = m->base[0] * lit + 255 * spec + 110 * sheen + 60 * rim;
-        double g = m->base[1] * lit + 255 * spec + 130 * sheen + 70 * rim;
-        double b = m->base[2] * lit + 255 * spec + 230 * sheen + 120 * rim;
-        put(S, sx, sy, (float)ooz, RAMP[ci], r, g, b);
+        /* Colour follows the same brightness as the character: deep navy in
+           shadow, the material colour at mid-tone, lifting toward a pale
+           periwinkle in the light, plus white specular highlights. */
+        static const double PALE[3] = {205, 215, 255};
+        double L = clampd(lum - spec, 0, 1), rgb[3];
+        for (int c = 0; c < 3; c++) {
+            double base = m->base[c];
+            rgb[c] = L < 0.5 ? base * (0.30 + 1.40 * L)
+                             : base + (PALE[c] - base) * (L - 0.5) * 1.3;
+            rgb[c] += 255 * spec;
+        }
+        put(S, sx, sy, (float)ooz, RAMP[ci], rgb[0], rgb[1], rgb[2]);
     }
 
     /* 4. ray-cast the floor (world plane y = FLOOR_Y) */

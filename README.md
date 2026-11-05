@@ -1,13 +1,13 @@
 # spinning-ascii
 
-Things that spin in 3D, drawn with ASCII characters in your terminal.
+Spinning 3D objects, rendered live as ASCII art in your terminal.
 
 Each spinner is a single C file that needs only the C standard library and
-`libm`. It models a real object, lights it, and renders it live as
-coloured text.
+`libm`. It models a real object, lights it, and draws it frame by frame
+as coloured text.
 
 <p align="center">
-  <img src="wizard-hat/wizard-hat.gif" alt="A navy wizard hat spinning in ASCII, with gold sparkles and a shadow on a checkered floor" width="640">
+  <img src="wizard-hat/wizard-hat.gif" alt="A navy wizard hat spinning in ASCII, with gold sparkles and a shadow on a checkered floor" width="700">
 </p>
 
 ## The collection
@@ -61,8 +61,8 @@ New spinners are welcome. To keep the collection consistent, each one should:
    `\r\n` and no cursor movement. That lets
    [`tools/ansi2gif.py`](tools/ansi2gif.py) turn its output into a GIF:
    ```sh
-   ./name/name --frames 96 --size 80x36 --fps 16 \
-       | tools/ansi2gif.py --size 80x36 --fps 16 -o name/name.gif
+   ./name/name --frames 96 --size 100x45 --fps 16 \
+       | tools/ansi2gif.py --size 100x45 --fps 16 -o name/name.gif
    ```
    This needs Python 3 and ImageMagick with SVG support.
 4. Quit cleanly on `q` and Ctrl-C, leaving the terminal as it found it.

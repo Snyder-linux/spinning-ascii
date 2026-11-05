@@ -69,8 +69,9 @@ The hat is built from six parametric surfaces, each a function
    sampling 3×3 neighbours.
 3. **Shade.** Each point is lit by three lights: a main light, a fill light
    and a back light. Shiny highlights are added on the satin, and a soft
-   glow on velvet edges seen at a grazing angle. A little noise mimics the
-   fabric texture.
+   glow on velvet edges seen at a grazing angle. The colour follows the same
+   brightness as the character: deep navy in shadow, lifting to pale
+   periwinkle in the light.
 4. **Project.** Points are projected with perspective, at half height for the
    tall character cells. A per-cell depth buffer keeps whichever point is
    nearest.
@@ -102,8 +103,8 @@ It needs ImageMagick (`magick`) at runtime to read the image.
 ## Rebuilding the GIF
 
 ```sh
-./hat3d --frames 96 --size 80x36 --fps 16 --spin 1.0472 \
-    | ../tools/ansi2gif.py --size 80x36 --fps 16 -o wizard-hat.gif
+./hat3d --frames 96 --size 100x45 --fps 16 --spin 1.0472 \
+    | ../tools/ansi2gif.py --size 100x45 --fps 16 -o wizard-hat.gif
 ```
 
 `--spin 1.0472` makes 96 frames at 16 fps add up to one full turn.
