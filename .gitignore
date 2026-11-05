@@ -1,0 +1,4 @@
+# Compiled spinners: every */name.c builds to */name, a file with no
+# extension. Ignore everything one folder down, then allow files that have one.
+/*/*
+!/*/*.*
